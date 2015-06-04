@@ -1,0 +1,25 @@
+﻿[OpenDialog1]
+Coordinates=252,56,89,36
+
+[Panel1]
+Coordinates=197,10,47,51
+
+[Panel2]
+Coordinates=10,10,47,51
+
+[Button1]
+Coordinates=74,10,53,51
+LayerNames=NewLayer0
+
+[Timer1]
+Coordinates=155,155,54,36
+
+[]
+Coordinates=10,78,46,51
+Visible=True
+
+[Module Settings]
+ModelLayerNames=NewLayer0
+ActiveLayerNames=NewLayer0
+EditingLayerName=NewLayer0
+
