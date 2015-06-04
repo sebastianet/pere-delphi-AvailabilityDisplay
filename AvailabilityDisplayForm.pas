@@ -7,6 +7,10 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.ComCtrls, pdatesw;
 
 type
+
+  TdayPings = array[0..23,0..59] of integer;
+  TyearPings = array[1..31,1..12] of TdayPings;
+
   TForm1 = class(TForm)
     Panel1: TPanel;
     Panel2: TPanel;
@@ -39,11 +43,10 @@ type
     procedure PaintBoxMonthPaint(Sender: TObject);
     procedure PaintBoxCurrentMonthPaint(Sender: TObject);
   private
-    pings: TStrings;
-
+    yearpings: TYearPings;
     procedure LoadFile(fn: string);
-    procedure loadArray(a: array of integer);
     procedure loadText(text: string);
+    procedure loadStrings(s: TStrings);
     procedure doPing;
     procedure say(s: string);
     function randomValue: integer;
@@ -51,6 +54,8 @@ type
     function getDayValue(d: TDateTime): integer;
     function getHourValue(d: TDateTime): integer;
     function getMinuteValue(d: TDateTime): integer;
+    procedure setMinuteValue(d: TDateTime; v:integer);
+
     { Private declarations }
   public
     { Public declarations }
@@ -70,7 +75,7 @@ const dotsize=10; margin=10;
 (***************************************************************)
 function TForm1.randomValue:integer;
  begin
-  if random(5)<1 then
+  if random(10)<1 then
     result:=0
   else
     result:=100+random(100);
@@ -78,24 +83,64 @@ function TForm1.randomValue:integer;
 
 function TForm1.valueToColor(v:integer):TColor;
  begin
-   if v=0 then result:=clRed else result:=RGB(0,0,v);
+   if v=-1 then result:=clWhite
+   else if v=0 then result:=clRed
+   else result:=RGB(v,200+(2*(100-v)),200);
  end;
 
 
 (***************************************************************)
+
+
 function TForm1.getDayValue(d:TDateTime):integer;
+var
+  i,c,r,v:integer; t:TDateTime;
  begin
-   result:=randomValue;
+   r:=-1;
+   t:=d;
+   for i := 0 to 23 do
+    begin
+      t:=encodedatetime(yearof(d),monthof(d),dayof(d),i,0,0,0);
+      v:=getHourValue(t);
+      if v=0 then begin result:=0; exit; end;
+       if v<>-1 then
+       begin
+        inc(c);
+        if r=-1 then r:=v else r:=r+v;
+       end;
+       result:=r div c;
+    end;
+
  end;
 
 function TForm1.getHourValue(d:TDateTime):integer;
+var  i,c,c0,r,v: Integer; t:TDateTime;
  begin
-   result:=randomValue;
+   r:=-1;
+   t:=d;
+   c0:=0;
+   for i := 0 to 59 do
+    begin
+      t:=encodedatetime(yearof(d),monthof(d),dayof(d),hourof(d),i,0,0);
+      v:=getMinuteValue(t);
+      if v=0 then begin inc(c0); if c0>10 then result:=0; exit; end;
+      if v<>-1 then
+       begin
+        inc(c);
+        if r=-1 then r:=v else r:=r+v;
+       end;
+       result:=r div c;
+    end;
  end;
 
 function TForm1.getMinuteValue(d:TDateTime):integer;
  begin
-   result:=randomValue;
+   result:=yearpings[monthof(d),dayof(d)][hourof(d),minuteof(d)];
+ end;
+
+procedure TForm1.setMinuteValue(d: TDateTime; v:integer);
+ begin
+   yearpings[monthof(d),dayof(d)][hourof(d),minuteof(d)]:=v;
  end;
 
 (***************************************************************)
@@ -119,16 +164,14 @@ procedure tForm1.say(s:string);
 
 procedure TForm1.PaintBoxTodayMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
-var i,h,m,v:integer;
+var h,m,v:integer;
 begin
   if (x<margin) or (y<margin) or (x>61*(dotsize+1)) or (y>25*(dotsize+1)) then
    exit;
 
   m:=(x-margin) div (dotsize+1);
   h:=(y-margin) div (dotsize+1);
-  i:=h*60+m;
-  v:=-1;
-  if i<pings.count then v:=strtoint(pings[i]);
+  v:=getminutevalue(trunc(today)+encodetime(h,m,0,0));
   say(format('%.2d:%.2d  %d',[h,m,v]));
 end;
 
@@ -143,14 +186,13 @@ begin
   m:=(x-margin) div (dotsize+1);
   h:=(y-margin) div (dotsize+1);
   i:=h*60+m;
-  v:=-1;
-  if i<pings.count then v:=strtoint(pings[i]);
-  label1.caption:=format('%.2d:%.2d  %d',[h,m,v]);
+  v:=getminutevalue(today+encodetime(h,m,0,0));
+  label1.caption:=format('%.2d:%.2d %d ',[h,m,v]);
 end;
 
 procedure TForm1.PaintBoxTodayPaint(Sender: TObject);
 var
- h,m,i,v:integer;
+ h,m,v:integer;
  c:TColor;
 
 begin
@@ -174,17 +216,9 @@ begin
   begin
    for m := 0 to 59 do
     begin
-     i:=h*60+m;
-     if i<pings.Count then
-      begin
-       v:=strtoint(pings[i]);
+       v:=getminutevalue(today+encodetime(h,m,0,0));
        c:=ValueToColor(v);
        PaintBoxToday.Canvas.brush.Color:=c;
-      end
-     else
-      begin
-       PaintBoxToday.Canvas.brush.color:=clWhite;
-      end;
      PaintBoxToday.Canvas.Rectangle(margin+m*(dotsize+1),margin+h*(dotsize+1), margin-1+(m+1)*(dotsize+1),margin-1+(h+1)*(dotsize+1));
     end;
   end;
@@ -214,7 +248,7 @@ begin
    for h := 0 to 23 do
     begin
      cdc:=(fdm+d-1)+encodeTime(h,0,0,0);
-     if cdc>trunc(now) then
+     if cdc>now then
        paintboxCurrentMonth.Canvas.brush.color:=clWhite
      else
        paintboxCurrentMonth.Canvas.brush.color:=valueToColor(gethourvalue(cdc));
@@ -233,13 +267,13 @@ begin
  senderpaintbox:=Sender as TPaintbox;
  // first day of this month is...
  if senderpaintbox=paintboxmonth1 then
-   fdm:=BeginOfPrevious(iMonth,BeginOfPrevious(iMonth,BeginOfPrevious(iMonth,now)))
+   fdm:=BeginOfPrevious(iMonth,BeginOfPrevious(iMonth,BeginOfPrevious(iMonth,today)))
  else if senderpaintbox=paintboxmonth2 then
-   fdm:=BeginOfPrevious(iMonth,BeginOfPrevious(iMonth,now))
+   fdm:=BeginOfPrevious(iMonth,BeginOfPrevious(iMonth,today))
  else if senderpaintbox=paintboxmonth3 then
-   fdm:=BeginOfPrevious(iMonth,now)
+   fdm:=BeginOfPrevious(iMonth,today)
  else
-   fdm:=now;
+   fdm:=today;
  // first day of this calendar is ...
  fdc:=beginof(iweek,fdm);
 
@@ -261,7 +295,7 @@ begin
      else if (monthOf(cdc)<>monthOf(fdm)) then
        senderPaintbox.Canvas.brush.color:=clWhite
      else
-       senderPaintbox.Canvas.brush.color:=clGray;
+       senderPaintbox.Canvas.brush.color:=clSilver;
      senderPaintbox.Canvas.Rectangle((d-1)*(dotsize+1),margin+w*(dotsize+1),d*(dotsize+1)-1,margin-1+(w+1)*(dotsize+1));
     end;
   end;
@@ -290,24 +324,32 @@ procedure TForm1.doPing;
 var s:string; v:integer;
 begin
   v:=randomValue;
-  pings.Add(inttostr(v));
+  //pings.Add(inttostr(v));
+  setminutevalue(now,v);
   say(inttostr(v));
   paintboxtoday.repaint;
 end;
 
 (***************************************************************)
 procedure TForm1.FormCreate(Sender: TObject);
-var i:integer;
- n:TDateTime;
- h,m:integer;
+var
+ cd,nd:TDateTime;
+ mo,da,ho,mi:integer;
 begin
- Pings := TStringList.Create;
- n:=now;
- for i:=1 to hourof(n)*60+minuteof(n) do doPing;
-end;
+ //Pings := TStringList.Create;
+ for mo := 1 to 12 do
+   for da := 1 to 31 do
+     for ho := 0 to 23 do
+       for mi := 0 to 59 do
+         yearPings[mo,da][ho,mi]:=-1;
 
-procedure TForm1.loadArray(a: array of integer);
-begin
+ cd:=encodedatetime(yearof(today),1,1,0,0,0,0);
+ nd:=now;
+ repeat
+  cd:=incminute(cd);
+  setminutevalue(cd,100);
+ until cd>nd;
+ say(datetimetostr(cd));
 
 end;
 
@@ -317,13 +359,31 @@ var s:TStrings;
  begin
   s:=TStringList.Create;
   s.LoadFromFile(fn);
-  loadText(s.Text);
+  loadStrings(s);
+  s.Free;
  end;
 
-procedure TForm1.loadText(text:string);
+procedure TForm1.loadStrings(s:TStrings);
+var
+  i: Integer;
+  cd:TDateTime;
  begin
-  pings.SetText(pWideChar(text));
+  cd:=encodedatetime(yearof(today),1,1,0,0,0,0);
+  for i := 0 to s.Count-1 do
+   begin
+    setminutevalue(cd,strtoint(s[i]));
+    cd:=incminute(cd);
+   end;
  end;
 
+
+procedure TForm1.loadText(text: string);
+var s:TStrings;
+ begin
+  s:=TStringList.Create;
+  s.setText(pWideChar(text));
+  loadStrings(s);
+  s.Free;
+ end;
 
 end.

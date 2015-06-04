@@ -23,8 +23,6 @@ object Form1: TForm1
     Align = alBottom
     Caption = 'Panel1'
     TabOrder = 0
-    ExplicitTop = 553
-    ExplicitWidth = 739
     object ListBox1: TListBox
       Left = 1
       Top = 1
@@ -33,7 +31,6 @@ object Form1: TForm1
       Align = alClient
       ItemHeight = 13
       TabOrder = 0
-      ExplicitWidth = 737
     end
     object StatusBar1: TStatusBar
       Left = 1
@@ -41,7 +38,6 @@ object Form1: TForm1
       Width = 1182
       Height = 19
       Panels = <>
-      ExplicitWidth = 737
     end
   end
   object Panel2: TPanel
@@ -51,7 +47,6 @@ object Form1: TForm1
     Height = 41
     Align = alTop
     TabOrder = 1
-    ExplicitWidth = 739
     object Label1: TLabel
       Left = 288
       Top = 14
@@ -94,8 +89,6 @@ object Form1: TForm1
     Height = 420
     Align = alClient
     TabOrder = 2
-    ExplicitLeft = 1
-    ExplicitTop = 65
     DesignSize = (
       1184
       420)
