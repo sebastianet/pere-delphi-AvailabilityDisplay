@@ -47,13 +47,6 @@ object Form1: TForm1
     Height = 41
     Align = alTop
     TabOrder = 1
-    object Label1: TLabel
-      Left = 288
-      Top = 14
-      Width = 31
-      Height = 13
-      Caption = 'Label1'
-    end
     object Button1: TButton
       Left = 12
       Top = 11
@@ -93,63 +86,114 @@ object Form1: TForm1
       1184
       420)
     object PaintBoxToday: TPaintBox
-      Left = 432
-      Top = 16
+      Left = 430
+      Top = 27
       Width = 746
-      Height = 393
+      Height = 387
       Hint = 'Ping Duration'
       Anchors = [akLeft, akRight, akBottom]
       ParentShowHint = False
       ShowHint = True
-      OnMouseDown = PaintBoxTodayMouseDown
       OnMouseMove = PaintBoxTodayMouseMove
       OnPaint = PaintBoxTodayPaint
-      ExplicitWidth = 561
     end
     object PaintBoxMonth1: TPaintBox
       Left = 12
-      Top = 16
+      Top = 39
       Width = 88
-      Height = 84
+      Height = 73
+      OnMouseDown = PaintBoxMonthMouseDown
       OnPaint = PaintBoxMonthPaint
     end
     object PaintBoxMonth2: TPaintBox
       Left = 12
-      Top = 107
+      Top = 139
       Width = 88
-      Height = 84
+      Height = 73
+      OnMouseDown = PaintBoxMonthMouseDown
       OnPaint = PaintBoxMonthPaint
     end
     object PaintBoxMonth3: TPaintBox
       Left = 12
-      Top = 200
+      Top = 239
       Width = 88
-      Height = 84
+      Height = 73
+      OnMouseDown = PaintBoxMonthMouseDown
       OnPaint = PaintBoxMonthPaint
     end
     object PaintBoxCurrentMonth: TPaintBox
       Left = 107
-      Top = 16
+      Top = 27
       Width = 317
-      Height = 393
+      Height = 382
       OnPaint = PaintBoxCurrentMonthPaint
     end
     object PaintBoxMonth4: TPaintBox
       Left = 13
-      Top = 297
+      Top = 337
       Width = 88
-      Height = 84
+      Height = 73
+      OnMouseDown = PaintBoxMonthMouseDown
       OnPaint = PaintBoxMonthPaint
+    end
+    object Label2: TLabel
+      Left = 107
+      Top = 12
+      Width = 55
+      Height = 13
+      Caption = 'Month year'
+    end
+    object Label3: TLabel
+      Left = 430
+      Top = 12
+      Width = 77
+      Height = 13
+      Caption = 'Day Month year'
+    end
+    object Label4: TLabel
+      Left = 13
+      Top = 24
+      Width = 55
+      Height = 13
+      Caption = 'Month year'
+    end
+    object Label5: TLabel
+      Left = 12
+      Top = 125
+      Width = 55
+      Height = 13
+      Caption = 'Month year'
+    end
+    object Label6: TLabel
+      Left = 13
+      Top = 225
+      Width = 55
+      Height = 13
+      Caption = 'Month year'
+    end
+    object Label7: TLabel
+      Left = 13
+      Top = 324
+      Width = 55
+      Height = 13
+      Caption = 'Month year'
+    end
+    object Label1: TLabel
+      Left = 544
+      Top = 12
+      Width = 31
+      Height = 13
+      Caption = 'Label1'
     end
   end
   object OpenDialog1: TOpenDialog
-    Left = 472
-    Top = 16
+    Left = 680
+    Top = 8
   end
   object Timer1: TTimer
     Interval = 60000
     OnTimer = Timer1Timer
-    Left = 424
-    Top = 16
+    Left = 640
+    Top = 8
   end
 end

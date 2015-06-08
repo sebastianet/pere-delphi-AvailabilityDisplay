@@ -3,8 +3,8 @@
 	<Transactions>
     <Transaction>2015/05/28 11:04:20.000.157,=C:\Users\pere\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
     <Transaction>2015/05/28 11:35:25.000.603,=C:\Users\pere\Documents\Embarcadero\Studio\Projects\Unit2.pas</Transaction>
-    <Transaction>2015/05/28 12:07:08.000.772,C:\Users\pere\Documents\Embarcadero\Studio\Projects\Unit1.dfm=C:\Users\pere\Documents\Embarcadero\Studio\Projects\AvailabilityDisplayForm.dfm</Transaction>
-    <Transaction>2015/05/28 12:07:08.000.772,C:\Users\pere\Documents\Embarcadero\Studio\Projects\Unit1.pas=C:\Users\pere\Documents\Embarcadero\Studio\Projects\AvailabilityDisplayForm.pas</Transaction>
-    <Transaction>2015/05/28 12:07:17.000.307,C:\Users\pere\Documents\Embarcadero\Studio\Projects\Project1.dproj=C:\Users\pere\Documents\Embarcadero\Studio\Projects\AvailabilityDisplay.dproj</Transaction>
+    <Transaction>2015/05/28 12:07:08.000.772,C:\Users\pere\Documents\Embarcadero\Studio\Projects\AvailabilityDisplayForm.dfm=C:\Users\pere\Documents\Embarcadero\Studio\Projects\Unit1.dfm</Transaction>
+    <Transaction>2015/05/28 12:07:08.000.772,C:\Users\pere\Documents\Embarcadero\Studio\Projects\AvailabilityDisplayForm.pas=C:\Users\pere\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2015/05/28 12:07:17.000.307,C:\Users\pere\Documents\Embarcadero\Studio\Projects\AvailabilityDisplay.dproj=C:\Users\pere\Documents\Embarcadero\Studio\Projects\Project1.dproj</Transaction>
   </Transactions>
 </BorlandProject>

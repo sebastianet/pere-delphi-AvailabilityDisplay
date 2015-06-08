@@ -9,7 +9,7 @@ uses
 type
 
   TdayPings = array[0..23,0..59] of integer;
-  TyearPings = array[1..31,1..12] of TdayPings;
+  TyearPings = array[1..12,1..31] of TdayPings;
 
   TForm1 = class(TForm)
     Panel1: TPanel;
@@ -29,6 +29,12 @@ type
     PaintBoxMonth3: TPaintBox;
     PaintBoxCurrentMonth: TPaintBox;
     PaintBoxMonth4: TPaintBox;
+    Label2: TLabel;
+    Label3: TLabel;
+    Label4: TLabel;
+    Label5: TLabel;
+    Label6: TLabel;
+    Label7: TLabel;
 
     procedure PaintBoxTodayPaint(Sender: TObject);
     procedure Button1Click(Sender: TObject);
@@ -36,14 +42,16 @@ type
     procedure FormCreate(Sender: TObject);
     procedure Button3Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
-    procedure PaintBoxTodayMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure PaintBoxTodayMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
     procedure PaintBoxMonthPaint(Sender: TObject);
     procedure PaintBoxCurrentMonthPaint(Sender: TObject);
+    procedure PaintBoxMonthMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
   private
-    yearpings: TYearPings;
+    yearPings: TYearPings;
+    displayDay: TDateTime;
+
     procedure LoadFile(fn: string);
     procedure loadText(text: string);
     procedure loadStrings(s: TStrings);
@@ -55,10 +63,8 @@ type
     function getHourValue(d: TDateTime): integer;
     function getMinuteValue(d: TDateTime): integer;
     procedure setMinuteValue(d: TDateTime; v:integer);
-
-    { Private declarations }
   public
-    { Public declarations }
+
   end;
 
 var
@@ -91,46 +97,60 @@ function TForm1.valueToColor(v:integer):TColor;
 
 (***************************************************************)
 
+const thresholdForZeroDay = 5;
 
 function TForm1.getDayValue(d:TDateTime):integer;
-var
-  i,c,r,v:integer; t:TDateTime;
+ var
+  i,c,r,v,c0:integer; t:TDateTime;
  begin
-   r:=-1;
-   t:=d;
-   for i := 0 to 23 do
-    begin
-      t:=encodedatetime(yearof(d),monthof(d),dayof(d),i,0,0,0);
-      v:=getHourValue(t);
-      if v=0 then begin result:=0; exit; end;
-       if v<>-1 then
-       begin
-        inc(c);
-        if r=-1 then r:=v else r:=r+v;
-       end;
-       result:=r div c;
-    end;
-
+  r:=-1;
+  t:=d;
+  c0:=0; // counter of zero values
+  c:=0;
+  result:=0;
+  for i := 0 to 23 do
+  begin
+    t:=encodedatetime(yearof(d),monthof(d),dayof(d),i,0,0,0);
+    v:=getHourValue(t);
+    if v=0 then
+     begin
+      inc(c0);
+      if c0>=thresholdForZeroDay then exit;
+     end
+    else if v<>-1 then
+     begin
+      inc(c);
+      if r=-1 then r:=v else r:=r+v;
+     end;
+  end;
+  result:=r div c;
  end;
 
+const thresholdForZeroHour=10;
 function TForm1.getHourValue(d:TDateTime):integer;
 var  i,c,c0,r,v: Integer; t:TDateTime;
  begin
    r:=-1;
    t:=d;
-   c0:=0;
+   c0:=0;   // counter for zeros
+   c:=0;
+   result:=0;
    for i := 0 to 59 do
     begin
       t:=encodedatetime(yearof(d),monthof(d),dayof(d),hourof(d),i,0,0);
       v:=getMinuteValue(t);
-      if v=0 then begin inc(c0); if c0>10 then result:=0; exit; end;
-      if v<>-1 then
+      if v=0 then
+       begin
+        inc(c0);
+        if c0>=thresholdForZeroHour then exit;
+       end
+      else if v<>-1 then
        begin
         inc(c);
         if r=-1 then r:=v else r:=r+v;
        end;
-       result:=r div c;
     end;
+   if c<>0 then result:=r div c else result:=-1;
  end;
 
 function TForm1.getMinuteValue(d:TDateTime):integer;
@@ -162,18 +182,7 @@ procedure tForm1.say(s:string);
   Listbox1.Itemindex:=Listbox1.Items.Count-1;
  end;
 
-procedure TForm1.PaintBoxTodayMouseDown(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
-var h,m,v:integer;
-begin
-  if (x<margin) or (y<margin) or (x>61*(dotsize+1)) or (y>25*(dotsize+1)) then
-   exit;
 
-  m:=(x-margin) div (dotsize+1);
-  h:=(y-margin) div (dotsize+1);
-  v:=getminutevalue(trunc(today)+encodetime(h,m,0,0));
-  say(format('%.2d:%.2d  %d',[h,m,v]));
-end;
 
 procedure TForm1.PaintBoxTodayMouseMove(Sender: TObject; Shift: TShiftState; X,
   Y: Integer);
@@ -196,6 +205,7 @@ var
  c:TColor;
 
 begin
+ label3.caption:=inttostr(dayOf(displayDay))+' '+FormatSettings.LongMonthNames[MonthOf(displayDay)]+' '+inttostr(YearOf(displayDay));
 
  // margins and numbers
  PaintBoxToday.Canvas.brush.style:=bsClear;
@@ -216,9 +226,9 @@ begin
   begin
    for m := 0 to 59 do
     begin
-       v:=getminutevalue(today+encodetime(h,m,0,0));
-       c:=ValueToColor(v);
-       PaintBoxToday.Canvas.brush.Color:=c;
+     v:=getminutevalue(displayDay+encodetime(h,m,0,0));
+     c:=ValueToColor(v);
+     PaintBoxToday.Canvas.brush.Color:=c;
      PaintBoxToday.Canvas.Rectangle(margin+m*(dotsize+1),margin+h*(dotsize+1), margin-1+(m+1)*(dotsize+1),margin-1+(h+1)*(dotsize+1));
     end;
   end;
@@ -229,18 +239,18 @@ var
   d,h: integer;
   fdm,cdc:TDateTime;
 begin
- fdm:=trunc(beginOf(iMonth,today));
+ fdm:=trunc(beginOf(iMonth,displayDay));
+ label2.caption:=FormatSettings.LongMonthNames[MonthOf(fdm)]+' '+inttostr(YearOf(fdm));
+
  paintboxCurrentMonth.Canvas.Pen.Style:=psSolid;
  paintboxCurrentMonth.Canvas.Pen.Color:=clBlack;
- paintboxCurrentMonth.canvas.Textout(1,1,FormatSettings.LongMonthNames[MonthOf(fdm)]+' '+inttostr(YearOf(fdm)));
-
  paintboxCurrentMonth.Canvas.Font.Size:=6;
  for d := 1 to dayOf(endOf(iMonth,fdm)) do
-  paintboxCurrentMonth.canvas.Textout(1,margin+d*(dotsize+1),inttostr(d));
+  paintboxCurrentMonth.canvas.Textout(1,d*(dotsize+1),inttostr(d));
 
  for h := 0 to 24 do
   if (h=6) or (h=12) or (h=18) or (h=24) then
-    paintboxCurrentMonth.canvas.Textout(margin+h*(dotsize+1),dotsize,inttostr(h));
+    paintboxCurrentMonth.canvas.Textout(margin+h*(dotsize+1),1,inttostr(h));
 
  paintboxCurrentMonth.Canvas.pen.Style:=psClear;
  for d := 1 to dayOf(endOf(iMonth,fdm)) do
@@ -252,17 +262,52 @@ begin
        paintboxCurrentMonth.Canvas.brush.color:=clWhite
      else
        paintboxCurrentMonth.Canvas.brush.color:=valueToColor(gethourvalue(cdc));
-     paintboxCurrentMonth.Canvas.Rectangle(margin+h*(dotsize+1),margin+d*(dotsize+1), margin-1+(h+1)*(dotsize+1),margin-1+(d+1)*(dotsize+1));
+     paintboxCurrentMonth.Canvas.Rectangle(margin+h*(dotsize+1),d*(dotsize+1), margin-1+(h+1)*(dotsize+1),(d+1)*(dotsize+1)-1);
     end;
   end;
 end;
 
 
+procedure TForm1.PaintBoxMonthMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+var
+  w,d:integer;
+  senderPaintbox:TPaintBox;
+  fdm,fdc,cdc:TDateTime;
+begin
+  if (x>7*(dotsize+1)) or (y>6*(dotsize+1)) then
+   exit;
+
+  senderpaintbox:=Sender as TPaintbox;
+  if senderpaintbox=paintboxmonth1 then
+   fdm:=BeginOfPrevious(iMonth,BeginOfPrevious(iMonth,BeginOfPrevious(iMonth,today)))
+  else if senderpaintbox=paintboxmonth2 then
+   fdm:=BeginOfPrevious(iMonth,BeginOfPrevious(iMonth,today))
+  else if senderpaintbox=paintboxmonth3 then
+   fdm:=BeginOfPrevious(iMonth,today)
+  else
+   fdm:=BeginOf(iMonth,today);
+  fdc:=beginof(iweek,fdm);
+
+  d:=x div (dotsize+1);
+  w:=y div (dotsize+1);
+
+  cdc:=fdc+w*7+d;
+
+  say(format('%.2d - %.2d  %s',[d,w,datetostr(cdc)]));
+
+  displayDay:=trunc(cdc);
+  paintboxToday.repaint;
+  paintboxCurrentMonth.repaint;
+end;
+
 procedure TForm1.PaintBoxMonthPaint(Sender: TObject);
 var
   w,d: integer;
   fdm,fdc,cdc:TDateTime;
-  senderpaintbox:TPaintBox;
+  senderPaintbox:TPaintBox;
+  labelForThis:TLabel;
+
 begin
  senderpaintbox:=Sender as TPaintbox;
  // first day of this month is...
@@ -273,17 +318,25 @@ begin
  else if senderpaintbox=paintboxmonth3 then
    fdm:=BeginOfPrevious(iMonth,today)
  else
-   fdm:=today;
+   fdm:=BeginOf(iMonth,today);
+ if senderpaintbox=paintboxmonth1 then
+   labelForThis:=Label4
+ else if senderpaintbox=paintboxmonth2 then
+   labelForThis:=Label5
+ else if senderpaintbox=paintboxmonth3 then
+   labelForThis:=Label6
+ else
+   labelForThis:=Label7;
  // first day of this calendar is ...
  fdc:=beginof(iweek,fdm);
 
- senderPaintbox.Canvas.Pen.Style:=psSolid;
- senderPaintbox.Canvas.Pen.Color:=clBlack;
- senderPaintbox.canvas.Textout(1,1,FormatSettings.LongMonthNames[MonthOf(fdm)]+' '+inttostr(YearOf(fdm)));
+// senderPaintbox.Canvas.Pen.Style:=psSolid;
+// senderPaintbox.Canvas.Pen.Color:=clBlack;
+ labelForThis.caption:=FormatSettings.LongMonthNames[MonthOf(fdm)]+' '+inttostr(YearOf(fdm));
+
 
  senderPaintbox.Canvas.brush.style:=bsSolid;
  senderPaintbox.Canvas.Pen.Style:=psClear;
-
  for w := 1 to 6 do
   begin
    for d := 1 to 7 do
@@ -296,7 +349,7 @@ begin
        senderPaintbox.Canvas.brush.color:=clWhite
      else
        senderPaintbox.Canvas.brush.color:=clSilver;
-     senderPaintbox.Canvas.Rectangle((d-1)*(dotsize+1),margin+w*(dotsize+1),d*(dotsize+1)-1,margin-1+(w+1)*(dotsize+1));
+     senderPaintbox.Canvas.Rectangle((d-1)*(dotsize+1),(w-1)*(dotsize+1),d*(dotsize+1)-1,w*(dotsize+1)-1);
     end;
   end;
 end;
@@ -347,10 +400,10 @@ begin
  nd:=now;
  repeat
   cd:=incminute(cd);
-  setminutevalue(cd,100);
+  setminutevalue(cd,randomValue);
  until cd>nd;
  say(datetimetostr(cd));
-
+ displayDay:=today;
 end;
 
 (***************************************************************)
