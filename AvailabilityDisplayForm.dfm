@@ -126,6 +126,7 @@ object Form1: TForm1
       Top = 27
       Width = 317
       Height = 382
+      OnMouseDown = PaintBoxCurrentMonthMouseDown
       OnPaint = PaintBoxCurrentMonthPaint
     end
     object PaintBoxMonth4: TPaintBox

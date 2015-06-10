@@ -48,6 +48,8 @@ type
     procedure PaintBoxCurrentMonthPaint(Sender: TObject);
     procedure PaintBoxMonthMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure PaintBoxCurrentMonthMouseDown(Sender: TObject;
+      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
   private
     yearPings: TYearPings;
     displayDay: TDateTime;
@@ -56,11 +58,14 @@ type
     procedure loadText(text: string);
     procedure loadStrings(s: TStrings);
     procedure doPing;
-    procedure say(s: string);
+    procedure say(s:string);
     function randomValue: integer;
     function valueToColor(v: integer): TColor;
+    function failCountToColor(c: integer): TColor;
     function getDayValue(d: TDateTime): integer;
     function getHourValue(d: TDateTime): integer;
+    function getHourFailCount(d: TDateTime): integer;
+    function getDayFailCount(d: TDateTime): integer;
     function getMinuteValue(d: TDateTime): integer;
     procedure setMinuteValue(d: TDateTime; v:integer);
   public
@@ -77,80 +82,115 @@ implementation
 (***************************************************************)
 const dotsize=10; margin=10;
 
+const PINGFAILED = 0;
+const PINGNODATA = -1;
 
 (***************************************************************)
 function TForm1.randomValue:integer;
  begin
   if random(10)<1 then
-    result:=0
+    result:= PINGFAILED
   else
     result:=100+random(100);
  end;
 
 function TForm1.valueToColor(v:integer):TColor;
  begin
-   if v=-1 then result:=clWhite
-   else if v=0 then result:=clRed
+   if v=PINGNODATA then result:=clWhite
+   else if v=PINGFAILED then result:=clRed
    else result:=RGB(v,200+(2*(100-v)),200);
+ end;
+
+function TForm1.failCountToColor(c: integer): TColor;
+ begin
+  if c=0 then result:=RGB(100,100,200)
+  else if c<10 then result:=RGB(200,c*10,0)
+  else result:=RGB(200,200+(2*(100-c)),c);
+
  end;
 
 
 (***************************************************************)
 
-const thresholdForZeroDay = 5;
+const thresholdForFailuresPerDay = 5;
+const thresholdForFailuresPerHour=10;
 
 function TForm1.getDayValue(d:TDateTime):integer;
  var
-  i,c,r,v,c0:integer; t:TDateTime;
+  i,c,r,v,cf:integer; t:TDateTime;
  begin
-  r:=-1;
+  r:=PINGNODATA;
   t:=d;
-  c0:=0; // counter of zero values
+  cf:=0; // counter of ping fails
   c:=0;
-  result:=0;
-  for i := 0 to 23 do
+  result:=PINGNODATA;
+  for i:=0 to 23 do
   begin
     t:=encodedatetime(yearof(d),monthof(d),dayof(d),i,0,0,0);
     v:=getHourValue(t);
-    if v=0 then
+    if v=PINGFAILED then
      begin
-      inc(c0);
-      if c0>=thresholdForZeroDay then exit;
+      inc(cf);
+      if cf>=thresholdForFailuresPerDay then exit;
      end
-    else if v<>-1 then
+    else if v<>PINGNODATA then
      begin
       inc(c);
-      if r=-1 then r:=v else r:=r+v;
+      if r=PINGNODATA then r:=v else r:=r+v;
      end;
   end;
   result:=r div c;
  end;
 
-const thresholdForZeroHour=10;
 function TForm1.getHourValue(d:TDateTime):integer;
-var  i,c,c0,r,v: Integer; t:TDateTime;
+var  i,c,cf,r,v: Integer; t:TDateTime;
  begin
-   r:=-1;
+   r:=PINGNODATA;
    t:=d;
-   c0:=0;   // counter for zeros
+   cf:=0;   // counter for failures
    c:=0;
-   result:=0;
+   result:=PINGFAILED;
    for i := 0 to 59 do
     begin
       t:=encodedatetime(yearof(d),monthof(d),dayof(d),hourof(d),i,0,0);
       v:=getMinuteValue(t);
-      if v=0 then
+      if v=PINGFAILED then
        begin
-        inc(c0);
-        if c0>=thresholdForZeroHour then exit;
+        inc(cf);
+        if cf>=thresholdForFailuresPerHour then exit;
        end
-      else if v<>-1 then
+      else if v<>PINGNODATA then
        begin
         inc(c);
-        if r=-1 then r:=v else r:=r+v;
+        if r=PINGNODATA then r:=v else r:=r+v;
        end;
     end;
-   if c<>0 then result:=r div c else result:=-1;
+   if c<>0 then result:=r div c else result:=PINGNODATA;
+ end;
+
+function TForm1.getHourFailCount(d:TDateTime):integer;
+var i,v:integer;  t:TDateTime;
+ begin
+  t:=d;
+  result:=0;
+  for i := 0 to 59 do
+   begin
+    t:=encodedatetime(yearof(d),monthof(d),dayof(d),hourof(d),i,0,0);
+    v:=getMinuteValue(t);
+    if v=PINGFAILED then inc(result);
+   end;
+ end;
+
+function TForm1.getDayFailCount(d:TDateTime):integer;
+var i:integer; t:TDateTime;
+ begin
+  t:=d;
+  result:=0;
+  for i:=0 to 23 do
+   begin
+    t:=encodedatetime(yearof(d),monthof(d),dayof(d),i,0,0,0);
+    inc(result,getHourFailCount(t));
+   end;
  end;
 
 function TForm1.getMinuteValue(d:TDateTime):integer;
@@ -234,6 +274,16 @@ begin
   end;
 end;
 
+procedure TForm1.PaintBoxCurrentMonthMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var  d:integer;
+ begin
+  if (y>(daysInMonth(displayDay)+1)*(dotsize+1)) then exit;
+  d:=y div (dotsize+1);
+  displayDay:=EncodeDate(yearOf(displayDay),monthOf(displayDay),d);
+  paintboxToday.repaint;
+ end;
+
+
 procedure TForm1.PaintBoxCurrentMonthPaint(Sender: TObject);
 var
   d,h: integer;
@@ -261,7 +311,8 @@ begin
      if cdc>now then
        paintboxCurrentMonth.Canvas.brush.color:=clWhite
      else
-       paintboxCurrentMonth.Canvas.brush.color:=valueToColor(gethourvalue(cdc));
+       //paintboxCurrentMonth.Canvas.brush.color:=valueToColor(gethourvalue(cdc));
+       paintboxCurrentMonth.Canvas.brush.color:=failCountToColor(getHourFailCount(cdc));
      paintboxCurrentMonth.Canvas.Rectangle(margin+h*(dotsize+1),d*(dotsize+1), margin-1+(h+1)*(dotsize+1),(d+1)*(dotsize+1)-1);
     end;
   end;
@@ -344,7 +395,7 @@ begin
      // current day of calendar is ...
      cdc:=fdc+(w-1)*7+d-1;
      if (monthOf(cdc)=monthOf(fdm)) and (cdc<now) then
-       senderPaintbox.Canvas.brush.color:=valueToColor(getDayValue(cdc))
+       senderPaintbox.Canvas.brush.color:=failCountToColor(getDayFailCount(cdc))
      else if (monthOf(cdc)<>monthOf(fdm)) then
        senderPaintbox.Canvas.brush.color:=clWhite
      else
@@ -374,14 +425,13 @@ end;
 
 (***************************************************************)
 procedure TForm1.doPing;
-var s:string; v:integer;
+var v:integer;
 begin
   v:=randomValue;
-  //pings.Add(inttostr(v));
   setminutevalue(now,v);
-  say(inttostr(v));
   paintboxtoday.repaint;
 end;
+
 
 (***************************************************************)
 procedure TForm1.FormCreate(Sender: TObject);
@@ -394,7 +444,7 @@ begin
    for da := 1 to 31 do
      for ho := 0 to 23 do
        for mi := 0 to 59 do
-         yearPings[mo,da][ho,mi]:=-1;
+         yearPings[mo,da][ho,mi]:=PINGNODATA;
 
  cd:=encodedatetime(yearof(today),1,1,0,0,0,0);
  nd:=now;
@@ -402,7 +452,6 @@ begin
   cd:=incminute(cd);
   setminutevalue(cd,randomValue);
  until cd>nd;
- say(datetimetostr(cd));
  displayDay:=today;
 end;
 
