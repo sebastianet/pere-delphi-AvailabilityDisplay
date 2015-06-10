@@ -2,7 +2,7 @@ object Form1: TForm1
   Left = 0
   Top = 0
   Caption = 'Form1'
-  ClientHeight = 593
+  ClientHeight = 646
   ClientWidth = 1184
   Color = clBtnFace
   DoubleBuffered = True
@@ -17,12 +17,13 @@ object Form1: TForm1
   TextHeight = 13
   object Panel1: TPanel
     Left = 0
-    Top = 461
+    Top = 514
     Width = 1184
     Height = 132
     Align = alBottom
     Caption = 'Panel1'
     TabOrder = 0
+    ExplicitTop = 461
     object ListBox1: TListBox
       Left = 1
       Top = 1
@@ -79,17 +80,19 @@ object Form1: TForm1
     Left = 0
     Top = 41
     Width = 1184
-    Height = 420
+    Height = 473
     Align = alClient
     TabOrder = 2
+    ExplicitLeft = -1
+    ExplicitTop = 47
     DesignSize = (
       1184
-      420)
+      473)
     object PaintBoxToday: TPaintBox
       Left = 430
       Top = 27
       Width = 746
-      Height = 387
+      Height = 382
       Hint = 'Ping Duration'
       Anchors = [akLeft, akRight, akBottom]
       ParentShowHint = False
@@ -103,6 +106,7 @@ object Form1: TForm1
       Width = 88
       Height = 73
       OnMouseDown = PaintBoxMonthMouseDown
+      OnMouseMove = PaintBoxMonthMouseMove
       OnPaint = PaintBoxMonthPaint
     end
     object PaintBoxMonth2: TPaintBox
@@ -111,6 +115,7 @@ object Form1: TForm1
       Width = 88
       Height = 73
       OnMouseDown = PaintBoxMonthMouseDown
+      OnMouseMove = PaintBoxMonthMouseMove
       OnPaint = PaintBoxMonthPaint
     end
     object PaintBoxMonth3: TPaintBox
@@ -119,6 +124,7 @@ object Form1: TForm1
       Width = 88
       Height = 73
       OnMouseDown = PaintBoxMonthMouseDown
+      OnMouseMove = PaintBoxMonthMouseMove
       OnPaint = PaintBoxMonthPaint
     end
     object PaintBoxCurrentMonth: TPaintBox
@@ -127,14 +133,16 @@ object Form1: TForm1
       Width = 317
       Height = 382
       OnMouseDown = PaintBoxCurrentMonthMouseDown
+      OnMouseMove = PaintBoxCurrentMonthMouseMove
       OnPaint = PaintBoxCurrentMonthPaint
     end
     object PaintBoxMonth4: TPaintBox
       Left = 13
       Top = 337
       Width = 88
-      Height = 73
+      Height = 72
       OnMouseDown = PaintBoxMonthMouseDown
+      OnMouseMove = PaintBoxMonthMouseMove
       OnPaint = PaintBoxMonthPaint
     end
     object Label2: TLabel
@@ -185,6 +193,13 @@ object Form1: TForm1
       Width = 31
       Height = 13
       Caption = 'Label1'
+    end
+    object Label8: TLabel
+      Left = 174
+      Top = 12
+      Width = 54
+      Height = 13
+      Caption = '000000000'
     end
   end
   object OpenDialog1: TOpenDialog

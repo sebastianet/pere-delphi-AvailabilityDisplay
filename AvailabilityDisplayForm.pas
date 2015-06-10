@@ -35,6 +35,7 @@ type
     Label5: TLabel;
     Label6: TLabel;
     Label7: TLabel;
+    Label8: TLabel;
 
     procedure PaintBoxTodayPaint(Sender: TObject);
     procedure Button1Click(Sender: TObject);
@@ -50,6 +51,10 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure PaintBoxCurrentMonthMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure PaintBoxCurrentMonthMouseMove(Sender: TObject; Shift: TShiftState;
+      X, Y: Integer);
+    procedure PaintBoxMonthMouseMove(Sender: TObject; Shift: TShiftState; X,
+      Y: Integer);
   private
     yearPings: TYearPings;
     displayDay: TDateTime;
@@ -68,6 +73,8 @@ type
     function getDayFailCount(d: TDateTime): integer;
     function getMinuteValue(d: TDateTime): integer;
     procedure setMinuteValue(d: TDateTime; v:integer);
+    function monthXYtoDateTime(senderPaintbox: TPaintbox; x, y: integer): TDateTime;
+    function failPercentageToColor(c: integer): TColor;
   public
 
   end;
@@ -101,13 +108,23 @@ function TForm1.valueToColor(v:integer):TColor;
    else result:=RGB(v,200+(2*(100-v)),200);
  end;
 
+function TForm1.failPercentageToColor(c:integer): TColor;
+ begin
+  if c<0 then result:=clWhite
+  else if c<=10 then result:=RGB(100+c*15,100-c*10,200-c*2)
+  else if c<20 then result:=RGB(255,0,200-c*2)
+  else result:=clRed;
+ end;
+
 function TForm1.failCountToColor(c: integer): TColor;
  begin
-  if c=0 then result:=RGB(100,100,200)
-  else if c<10 then result:=RGB(200,c*10,0)
-  else result:=RGB(200,200+(2*(100-c)),c);
-
+  if c=PINGNODATA then result:=clWhite
+  else if c<=10 then result:=RGB(100+c*15,100-c*10,200-c*2)
+  else if c<100 then result:=RGB(255,0,100-c)
+  else result:=clRed;
  end;
+
+
 
 
 (***************************************************************)
@@ -191,6 +208,8 @@ var i:integer; t:TDateTime;
     t:=encodedatetime(yearof(d),monthof(d),dayof(d),i,0,0,0);
     inc(result,getHourFailCount(t));
    end;
+  if result<0 then result:=PINGNODATA;
+
  end;
 
 function TForm1.getMinuteValue(d:TDateTime):integer;
@@ -284,6 +303,23 @@ var  d:integer;
  end;
 
 
+procedure TForm1.PaintBoxCurrentMonthMouseMove(Sender: TObject;
+  Shift: TShiftState; X, Y: Integer);
+var  d,h,c:integer;
+ begin
+  label8.caption:='';
+  if (x<margin) or (y<margin) or (y>margin+(daysInMonth(displayDay))*(dotsize+1)) or (x>margin+24*(dotsize+1)) then exit;
+  d:=1+(y-margin) div (dotsize+1);
+  if d>daysInMonth(displayDay) then d:=daysInMonth(displayDay);
+  h:=(x-margin) div (dotsize+1);
+  if h>23 then h:=23;
+
+
+  c:=getHourFailCount(EncodeDateTime(yearOf(displayDay),monthOf(displayDay),d,h,0,0,0));
+  label8.caption:=format('%.2d@%.2d:00 %d %d%%',[d,h,c,trunc(100.0*c/60.0)]);
+
+end;
+
 procedure TForm1.PaintBoxCurrentMonthPaint(Sender: TObject);
 var
   d,h: integer;
@@ -312,42 +348,55 @@ begin
        paintboxCurrentMonth.Canvas.brush.color:=clWhite
      else
        //paintboxCurrentMonth.Canvas.brush.color:=valueToColor(gethourvalue(cdc));
-       paintboxCurrentMonth.Canvas.brush.color:=failCountToColor(getHourFailCount(cdc));
+       paintboxCurrentMonth.Canvas.brush.color:=failPercentageToColor(trunc(100.0*getHourFailCount(cdc)/60.0));
      paintboxCurrentMonth.Canvas.Rectangle(margin+h*(dotsize+1),d*(dotsize+1), margin-1+(h+1)*(dotsize+1),(d+1)*(dotsize+1)-1);
     end;
   end;
 end;
 
 
-procedure TForm1.PaintBoxMonthMouseDown(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
-var
-  w,d:integer;
-  senderPaintbox:TPaintBox;
-  fdm,fdc,cdc:TDateTime;
-begin
-  if (x>7*(dotsize+1)) or (y>6*(dotsize+1)) then
-   exit;
+function TForm1.monthXYtoDateTime(senderPaintbox:TPaintbox;x,y:integer):TDateTime;
+ var
+  fdm,fdc:TDateTime;
+  d,w:integer;
+ begin
+  result:=0.0;
+  if (x>7*(dotsize+1)) or (y>6*(dotsize+1)) then exit;
 
-  senderpaintbox:=Sender as TPaintbox;
-  if senderpaintbox=paintboxmonth1 then
+  if senderPaintbox=paintboxMonth1 then
    fdm:=BeginOfPrevious(iMonth,BeginOfPrevious(iMonth,BeginOfPrevious(iMonth,today)))
-  else if senderpaintbox=paintboxmonth2 then
+  else if senderPaintbox=paintboxMonth2 then
    fdm:=BeginOfPrevious(iMonth,BeginOfPrevious(iMonth,today))
-  else if senderpaintbox=paintboxmonth3 then
+  else if senderPaintbox=paintboxMonth3 then
    fdm:=BeginOfPrevious(iMonth,today)
   else
    fdm:=BeginOf(iMonth,today);
-  fdc:=beginof(iweek,fdm);
-
+  fdc:=beginOf(iweek,fdm);
   d:=x div (dotsize+1);
   w:=y div (dotsize+1);
+  result:=fdc+w*7+d;
+ end;
 
-  cdc:=fdc+w*7+d;
+procedure TForm1.PaintBoxMonthMouseMove(Sender: TObject; Shift: TShiftState; X,
+  Y: Integer);
+ var
+  c:integer;
+  d:TDateTime;
+  senderPaintbox:TPaintBox;
+ begin
+  label8.caption:='';
+  d:=monthXYtoDateTime(Sender as TPaintbox,x,y);
+  if trunc(d)<>0 then
+   begin
+    c:=getDayFailCount(d);
+    label8.caption:=format('%.2d/%.2d %d %d%%',[dayof(d),monthof(d),c,trunc(100.0*c/60.0/24.0)]);
+   end;
+end;
 
-  say(format('%.2d - %.2d  %s',[d,w,datetostr(cdc)]));
-
-  displayDay:=trunc(cdc);
+procedure TForm1.PaintBoxMonthMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  displayDay:=trunc(monthXYtoDateTime(Sender as TPaintbox,x,y));
   paintboxToday.repaint;
   paintboxCurrentMonth.repaint;
 end;
@@ -395,7 +444,7 @@ begin
      // current day of calendar is ...
      cdc:=fdc+(w-1)*7+d-1;
      if (monthOf(cdc)=monthOf(fdm)) and (cdc<now) then
-       senderPaintbox.Canvas.brush.color:=failCountToColor(getDayFailCount(cdc))
+       senderPaintbox.Canvas.brush.color:=failPercentageToColor(trunc(100.0*getDayFailCount(cdc)/60.0/24.0))
      else if (monthOf(cdc)<>monthOf(fdm)) then
        senderPaintbox.Canvas.brush.color:=clWhite
      else
