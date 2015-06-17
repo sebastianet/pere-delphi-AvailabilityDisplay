@@ -1,9 +1,6 @@
 ﻿[OpenDialog1]
 Coordinates=252,56,89,36
 
-[Panel1]
-Coordinates=197,10,47,51
-
 [Panel2]
 Coordinates=10,10,47,51
 
@@ -15,7 +12,7 @@ LayerNames=NewLayer0
 Coordinates=155,155,54,36
 
 []
-Coordinates=10,78,46,51
+Coordinates=197,10,47,51
 Visible=True
 
 [Module Settings]

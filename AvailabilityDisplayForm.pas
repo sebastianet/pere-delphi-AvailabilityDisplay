@@ -12,16 +12,12 @@ type
   TyearPings = array[1..12,1..31] of TdayPings;
 
   TForm1 = class(TForm)
-    Panel1: TPanel;
     Panel2: TPanel;
     OpenDialog1: TOpenDialog;
     Button1: TButton;
     Timer1: TTimer;
     Button2: TButton;
     Button3: TButton;
-    ListBox1: TListBox;
-    StatusBar1: TStatusBar;
-    Label1: TLabel;
     PaintBoxToday: TPaintBox;
     Panel3: TPanel;
     PaintBoxMonth1: TPaintBox;
@@ -35,7 +31,7 @@ type
     Label5: TLabel;
     Label6: TLabel;
     Label7: TLabel;
-    Label8: TLabel;
+    StatusBar1: TStatusBar;
 
     procedure PaintBoxTodayPaint(Sender: TObject);
     procedure Button1Click(Sender: TObject);
@@ -237,8 +233,9 @@ procedure tForm1.say(s:string);
  begin
   DateTimeToString(m, 'hh:nn:ss.zzz', now);
   m:=m+' '+s;
-  Listbox1.items.add(m);
-  Listbox1.Itemindex:=Listbox1.Items.Count-1;
+  StatusBar1.SimpleText:=m;
+  //Listbox1.items.add(m);
+  //Listbox1.Itemindex:=Listbox1.Items.Count-1;
  end;
 
 
@@ -247,15 +244,15 @@ procedure TForm1.PaintBoxTodayMouseMove(Sender: TObject; Shift: TShiftState; X,
   Y: Integer);
 var i,h,m,v:integer;
 begin
-  label1.caption:='';
+  StatusBar1.SimpleText:='';
   if (x<margin) or (y<margin) or (x>61*(dotsize+1)) or (y>25*(dotsize+1)) then
    exit;
 
   m:=(x-margin) div (dotsize+1);
   h:=(y-margin) div (dotsize+1);
   i:=h*60+m;
-  v:=getminutevalue(today+encodetime(h,m,0,0));
-  label1.caption:=format('%.2d:%.2d %d ',[h,m,v]);
+  v:=getminutevalue(displayDay+encodetime(h,m,0,0));
+  StatusBar1.SimpleText:=format('%.2d:%.2d %d ',[h,m,v]);
 end;
 
 procedure TForm1.PaintBoxTodayPaint(Sender: TObject);
@@ -307,7 +304,7 @@ procedure TForm1.PaintBoxCurrentMonthMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 var  d,h,c:integer;
  begin
-  label8.caption:='';
+  StatusBar1.SimpleText:='';
   if (x<margin) or (y<margin) or (y>margin+(daysInMonth(displayDay))*(dotsize+1)) or (x>margin+24*(dotsize+1)) then exit;
   d:=1+(y-margin) div (dotsize+1);
   if d>daysInMonth(displayDay) then d:=daysInMonth(displayDay);
@@ -316,7 +313,7 @@ var  d,h,c:integer;
 
 
   c:=getHourFailCount(EncodeDateTime(yearOf(displayDay),monthOf(displayDay),d,h,0,0,0));
-  label8.caption:=format('%.2d@%.2d:00 %d %d%%',[d,h,c,trunc(100.0*c/60.0)]);
+  StatusBar1.SimpleText:=format('%.2d@%.2d:00 %d %d%%',[d,h,c,trunc(100.0*c/60.0)]);
 
 end;
 
@@ -384,12 +381,12 @@ procedure TForm1.PaintBoxMonthMouseMove(Sender: TObject; Shift: TShiftState; X,
   d:TDateTime;
   senderPaintbox:TPaintBox;
  begin
-  label8.caption:='';
+  StatusBar1.SimpleText:='';
   d:=monthXYtoDateTime(Sender as TPaintbox,x,y);
   if trunc(d)<>0 then
    begin
     c:=getDayFailCount(d);
-    label8.caption:=format('%.2d/%.2d %d %d%%',[dayof(d),monthof(d),c,trunc(100.0*c/60.0/24.0)]);
+    StatusBar1.SimpleText:=format('%.2d/%.2d %d %d%%',[dayof(d),monthof(d),c,trunc(100.0*c/60.0/24.0)]);
    end;
 end;
 

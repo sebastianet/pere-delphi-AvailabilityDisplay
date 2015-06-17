@@ -2,7 +2,9 @@ program AvailabilityDisplay;
 
 uses
   Vcl.Forms,
-  AvailabilityDisplayForm in 'AvailabilityDisplayForm.pas' {Form1};
+  AvailabilityDisplayForm in 'AvailabilityDisplayForm.pas' {Form1},
+  Vcl.Themes,
+  Vcl.Styles;
 
 {$R *.res}
 
