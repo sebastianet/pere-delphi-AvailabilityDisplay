@@ -22,8 +22,6 @@ object Form1: TForm1
     Height = 33
     Align = alTop
     TabOrder = 0
-    ExplicitLeft = 8
-    ExplicitTop = 370
     object Button1: TButton
       Left = 12
       Top = 3
@@ -32,6 +30,7 @@ object Form1: TForm1
       Caption = 'Load ...'
       Enabled = False
       TabOrder = 0
+      Visible = False
       OnClick = Button1Click
     end
     object Button3: TButton
@@ -42,6 +41,7 @@ object Form1: TForm1
       Caption = 'Stop'
       Enabled = False
       TabOrder = 1
+      Visible = False
       OnClick = Button3Click
     end
     object Button2: TButton
@@ -52,6 +52,7 @@ object Form1: TForm1
       Caption = 'Start'
       Enabled = False
       TabOrder = 2
+      Visible = False
       OnClick = Button2Click
     end
   end
@@ -62,9 +63,6 @@ object Form1: TForm1
     Height = 389
     Align = alClient
     TabOrder = 1
-    ExplicitTop = 41
-    ExplicitWidth = 1184
-    ExplicitHeight = 605
     object PaintBoxToday: TPaintBox
       Left = 398
       Top = 28
@@ -146,15 +144,15 @@ object Form1: TForm1
     object Label3: TLabel
       Left = 398
       Top = 12
-      Width = 91
+      Width = 77
       Height = 13
       Caption = 'Day Month year'
     end
     object Label4: TLabel
       Left = 13
       Top = 35
-      Width = 74
-      Height = 20
+      Width = 55
+      Height = 13
       Caption = 'Month year'
     end
     object Label5: TLabel
@@ -186,8 +184,6 @@ object Form1: TForm1
     Height = 19
     Panels = <>
     SimplePanel = True
-    ExplicitLeft = 8
-    ExplicitTop = 442
   end
   object OpenDialog1: TOpenDialog
     Left = 680
