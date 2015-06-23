@@ -21,6 +21,8 @@ object Form1: TForm1
     Width = 1087
     Height = 33
     Align = alTop
+    Color = clGradientInactiveCaption
+    ParentBackground = False
     TabOrder = 0
     object Button1: TButton
       Left = 12
